@@ -1,0 +1,15 @@
+{
+  "name": "aws-dynamodb-selective-cruds",
+  "version": "1.0.0",
+  "description": "aws dynamodbの部分取得/部分更新/部分削除",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "workspaces": [
+    "packages/cdk",
+    "packages/cruds"
+  ]
+}
