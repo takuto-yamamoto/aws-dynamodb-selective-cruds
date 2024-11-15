@@ -8,12 +8,12 @@ import {
 import { Construct } from 'constructs';
 
 export class Database extends Construct {
-  public table: ITable;
+  public readonly usersTable: ITable;
 
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    this.table = new Table(this, 'Table', {
+    this.usersTable = new Table(this, 'Table', {
       tableName: 'selective-cruds-table',
       partitionKey: {
         name: 'id',

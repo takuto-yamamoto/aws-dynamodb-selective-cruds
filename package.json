@@ -11,5 +11,8 @@
   "workspaces": [
     "packages/cdk",
     "packages/cruds"
-  ]
+  ],
+  "devDependencies": {
+    "@types/node": "^22.9.0"
+  }
 }
