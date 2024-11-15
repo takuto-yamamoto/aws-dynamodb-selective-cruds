@@ -7,15 +7,18 @@ import {
   UpdateCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { User } from './types';
+import { Logger } from '@aws-lambda-powertools/logger';
 
 export class dynamodbApi {
   private tableName: string;
   private client: DynamoDBDocumentClient;
+  private logger: Logger;
   private readonly MAX_FIELD_DEPTH = 2;
 
-  constructor(tableName: string) {
+  constructor(tableName: string, logger?: Logger) {
     this.tableName = tableName;
     this.client = DynamoDBDocumentClient.from(new DynamoDBClient());
+    this.logger = logger ?? new Logger();
   }
 
   async getUser(userId: string, fields: string[] = []): Promise<Partial<User>> {
@@ -32,7 +35,15 @@ export class dynamodbApi {
       input.ExpressionAttributeNames = expressionAttributeNames;
     }
 
-    const response = await this.client.send(new GetCommand(input));
+    const command = new GetCommand(input);
+
+    this.logger.info('DynamoDBアクセス開始', { tableName: this.tableName });
+    this.logger.debug('DynamoDBアクセスパラメータ', {
+      command: command.constructor.name,
+      input: command.input,
+    });
+    const response = await this.client.send(command);
+    this.logger.debug('DynamoDBアクセス結果', { metadata: response.$metadata });
 
     return response.Item as Partial<User>;
   }
@@ -57,7 +68,15 @@ export class dynamodbApi {
     input.ExpressionAttributeNames = expressionAttributeNames;
     input.ExpressionAttributeValues = expressionAttributeValues;
 
-    await this.client.send(new UpdateCommand(input));
+    const command = new UpdateCommand(input);
+
+    this.logger.info('DynamoDBアクセス開始', { tableName: this.tableName });
+    this.logger.debug('DynamoDBアクセスパラメータ', {
+      command: command.constructor.name,
+      input: command.input,
+    });
+    const response = await this.client.send(command);
+    this.logger.debug('DynamoDBアクセス結果', { metadata: response.$metadata });
   }
 
   private inferFields(data: Record<string, any>, maxDepth: number) {
@@ -106,7 +125,7 @@ export class dynamodbApi {
     const projectedFields = fields.map((field, i) => {
       const fieldParts = field.split('.').slice(0, maxFieldDepth);
       const placeholders = fieldParts.map((part, k) => {
-        const placeholder = `#attr${i}-${k}`;
+        const placeholder = `#attr${i}_${k}`;
         expressionAttributeNames[placeholder] = part;
         return placeholder;
       });
@@ -128,17 +147,17 @@ export class dynamodbApi {
     let targetFields: string[];
     if (fields.length > 0) {
       targetFields = fields.map((field) =>
-        field.split('.').slice(0, this.MAX_FIELD_DEPTH).join('.')
+        field.split('.').slice(0, maxFieldDepth).join('.')
       );
     } else {
-      targetFields = this.inferFields(data, this.MAX_FIELD_DEPTH);
+      targetFields = this.inferFields(data, maxFieldDepth);
     }
 
     updateExpression += targetFields
       .map((field, i) => {
         const valKey = `:val${i}`;
         const attrKeys = field.split('.').map((part, k) => {
-          const attrKey = `#attr${i}-${k}`;
+          const attrKey = `#attr${i}_${k}`;
           expressionAttributeNames[attrKey] = part;
           return attrKey;
         });

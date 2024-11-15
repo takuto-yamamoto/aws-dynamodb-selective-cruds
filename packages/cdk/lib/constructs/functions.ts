@@ -1,9 +1,12 @@
-import { Code, Function, IFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Duration } from 'aws-cdk-lib';
+import { IFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { Database } from './database';
 
 export type FunctionsProps = {
-  userTableName: string;
+  database: Database;
 };
 
 export class Functions extends Construct {
@@ -12,14 +15,19 @@ export class Functions extends Construct {
   constructor(scope: Construct, id: string, props: FunctionsProps) {
     super(scope, id);
 
-    this.usersLambda = new Function(this, 'usersLambda', {
+    const { usersTable } = props.database;
+
+    const usersLambda = new NodejsFunction(this, 'usersLambda', {
       functionName: 'selective-cruds-lambda',
       runtime: Runtime.NODEJS_20_X,
-      code: Code.fromAsset(path.join(__dirname, '../../../cruds')),
-      handler: 'index.handler',
+      entry: path.join(__dirname, '../../../cruds/index.ts'),
       environment: {
-        USER_TABLE: props.userTableName,
+        USERS_TABLE: usersTable.tableName,
       },
+      timeout: Duration.seconds(29),
     });
+    usersTable.grantReadWriteData(usersLambda);
+
+    this.usersLambda = usersLambda;
   }
 }
