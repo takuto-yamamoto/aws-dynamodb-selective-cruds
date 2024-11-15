@@ -16,7 +16,7 @@ export class Database extends Construct {
     this.table = new Table(this, 'Table', {
       tableName: 'selective-cruds-table',
       partitionKey: {
-        name: 'pk',
+        name: 'id',
         type: AttributeType.STRING,
       },
       billingMode: BillingMode.PAY_PER_REQUEST,
