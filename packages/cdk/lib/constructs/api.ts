@@ -5,6 +5,7 @@ import {
   RestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import { Construct } from 'constructs';
+
 import { Functions } from './functions';
 
 export type ApiProps = {

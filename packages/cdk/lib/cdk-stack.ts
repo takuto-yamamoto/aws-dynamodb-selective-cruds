@@ -1,9 +1,10 @@
-import * as cdk from 'aws-cdk-lib';
+import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+
 import { Api, Database, Functions } from './constructs';
 
-export class CdkStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+export class CdkStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     const database = new Database(this, 'Database');
